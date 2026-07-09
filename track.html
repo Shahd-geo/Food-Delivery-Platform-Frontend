@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Track Order</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<header class="topbar">
+
+<div class="container">
+
+<a href="index.html" class="btn btn--icon">←</a>
+
+<a href="index.html" class="topbar__brand">
+Codeline Eats
+</a>
+
+</div>
+
+</header>
+
+<main class="page-track">
+
+<div class="container">
+
+<div id="pageBanner"></div>
+
+<section class="track-card">
+
+<!-- Header -->
+
+<div class="track-card__header">
+
+<div>
+
+<p class="order-id" id="orderIdLabel"></p>
+
+<h1 class="restaurant-name" id="restaurantName">
+Loading...
+</h1>
+
+</div>
+
+<div class="eta-box">
+
+<span>ARRIVING IN</span>
+
+<strong id="etaCountdown">
+--
+</strong>
+
+</div>
+
+</div>
+
+<!-- Timeline -->
+
+<div class="track-card__timeline">
+
+<div class="timeline" id="timeline">
+
+</div>
+
+</div>
+
+<!-- Bottom -->
+
+<div class="track-card__bottom">
+
+<!-- Items -->
+
+<div>
+
+<h3 class="section-title">
+ITEMS
+</h3>
+
+<div id="orderDetails"></div>
+
+</div>
+
+<!-- Driver -->
+
+<div>
+
+<h3 class="section-title">
+DRIVER
+</h3>
+
+<div id="driverCard">
+
+<div class="driver">
+
+<img
+class="driver__avatar"
+src="user.webp"
+alt="Driver">
+
+<div class="driver__info">
+
+<strong>Loading...</strong>
+
+<div></div>
+
+<span class="badge">
+Preparing
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+<script type="module" src="track.js"></script>
+
+</body>
+</html>
