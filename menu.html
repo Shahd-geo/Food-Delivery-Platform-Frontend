@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menu & Cart · Codeline Eats</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="container">
+      <a href="index.html" class="btn btn--icon" aria-label="Back to restaurants">←</a>
+      <a href="index.html" class="topbar__brand">Codeline Eats</a>
+    </div>
+  </header>
+
+  <main class="page-menu">
+    <div class="container">
+
+      
+      <div id="pageBanner"></div>
+
+      <!-- ================= RESTAURANT HEAD ================= -->
+      <div class="restaurant-head">
+        <div>
+          <h1 class="restaurant-head__title" id="restaurantName">Loading…</h1>
+          <p class="restaurant-head__meta" id="restaurantMeta"></p>
+        </div>
+      </div>
+
+      <div class="menu-layout">
+
+        <!-- ================= LEFT: MENU ================= -->
+        <div>
+          <section id="combosSection">
+            <h2 class="section-title">Combos</h2>
+            <div class="combo-strip" id="comboStrip"></div>
+          </section>
+
+          <section>
+            <h2 class="section-title">Menu</h2>
+            <div class="menu-list" id="menuList"></div>
+          </section>
+        </div>
+
+        <!-- ================= RIGHT: CART (desktop) ================= -->
+        <aside class="card cart-panel" aria-label="Your cart">
+          <div class="cart-panel__head">
+            <h2>🛒 Your Cart</h2>
+            <span class="cart-count" id="cartCount">0</span>
+          </div>
+
+          <div id="cartLines"></div>
+
+          <div class="cart-totals">
+            <div class="cart-totals__row">
+              <span>Subtotal</span>
+              <span id="subtotal">0.000 OMR</span>
+            </div>
+            <div class="cart-totals__row">
+              <span>Delivery fee</span>
+              <span id="deliveryFee">0.000 OMR</span>
+            </div>
+            <div class="cart-totals__row cart-totals__row--total">
+              <span>Total</span>
+              <span><span id="total">0.000</span> <span class="unit">OMR</span></span>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn--primary" id="placeOrderBtn" disabled>
+            Place Order
+          </button>
+          <p class="min-order-note" id="minOrderNote"></p>
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= MOBILE CART FAB + DRAWER ================= -->
+  <button type="button" class="btn btn--primary cart-fab" id="cartFab" aria-label="Open cart">
+    🛒 <span id="cartFabCount">0</span>
+  </button>
+
+  <div class="cart-drawer-overlay" id="cartDrawerOverlay">
+    <div class="cart-drawer" role="dialog" aria-label="Your cart">
+      <div class="cart-panel__head">
+        <h2>🛒 Your Cart</h2>
+        <button type="button" class="btn btn--ghost" id="closeDrawerBtn">Close</button>
+      </div>
+
+      <div id="cartLinesMobile"></div>
+
+      <div class="cart-totals">
+        <div class="cart-totals__row">
+          <span>Subtotal</span>
+          <span id="subtotalMobile">0.000 OMR</span>
+        </div>
+        <div class="cart-totals__row">
+          <span>Delivery fee</span>
+          <span id="deliveryFeeMobile">0.000 OMR</span>
+        </div>
+        <div class="cart-totals__row cart-totals__row--total">
+          <span>Total</span>
+          <span><span id="totalMobile">0.000</span> <span class="unit">OMR</span></span>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn--primary" id="placeOrderBtnMobile" disabled>
+        Place Order
+      </button>
+      <p class="min-order-note" id="minOrderNoteMobile"></p>
+    </div>
+  </div>
+
+  <script type="module" src="menu.js"></script>
+</body>
+</html>
