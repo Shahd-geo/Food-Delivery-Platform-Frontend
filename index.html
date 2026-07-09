@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Codeline Eats — Restaurants</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="container">
+      <a href="index.html" class="topbar__brand">🍔 Codeline Eats</a>
+
+     <div class="topbar__search">
+
+  <span class="search-icon">🔍</span>
+
+  <label for="searchInput" class="sr-only">
+    Search restaurants
+  </label>
+
+  <input
+    type="search"
+    id="searchInput"
+    class="field"
+    placeholder="Search restaurants..."
+    aria-label="Search restaurants by name"
+  />
+
+</div>
+
+      <div class="topbar__right">
+        <span class="topbar__location">📍 Al Khuwair</span>
+        <a href="menu.html" class="btn btn--icon" aria-label="View cart">🛒</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-browse">
+    <div class="container">
+
+      <!-- page-level error banner (network failures) -->
+      <div id="pageBanner"></div>
+
+      <div class="chip-row" id="chipRow" role="group" aria-label="Filter by cuisine"></div>
+
+      <section class="restaurant-grid" id="restaurantGrid" aria-live="polite"></section>
+
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
