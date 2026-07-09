@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard · Codeline Eats</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="container">
+      <a href="index.html" class="btn btn--icon" aria-label="Back to restaurants">←</a>
+      <a href="index.html" class="topbar__brand">Codeline Eats</a>
+    </div>
+  </header>
+
+  <main class="page-admin">
+    <div class="container">
+
+      <!-- page-level error banner (network failures) -->
+      <div id="pageBanner"></div>
+
+      <div class="track-head">
+        <h1>Admin Dashboard</h1>
+        <label>
+          <span class="sr-only">Report date</span>
+          <input type="date" id="reportDate" class="field" />
+        </label>
+      </div>
+
+      <!-- Metric cards: daily summary + cancellation rate -->
+      <section class="metric-grid" id="metricGrid" aria-live="polite"></section>
+
+      <div class="panel-grid">
+        <section class="card">
+          <h2 class="panel-title">Busiest hours</h2>
+          <div class="chart-wrap">
+            <canvas id="busiestHoursChart"></canvas>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="panel-title">Top loyalty customers</h2>
+          <div id="loyaltyTableWrap"></div>
+        </section>
+      </div>
+
+      <section class="card" style="margin-top: var(--space-5)">
+        <h2 class="panel-title">Driver leaderboard</h2>
+        <div id="driverTableWrap"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <script type="module" src="./js/admin.js"></script>
+</body>
+</html>

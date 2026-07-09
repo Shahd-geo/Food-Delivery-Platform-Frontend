@@ -1053,3 +1053,80 @@ min-width:90px;
 }
 
 }
+
+.page-admin { padding-block: var(--space-5); }
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+@media (min-width: 640px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 960px) { .metric-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.metric-grid .card { border-left: 4px solid var(--brand-mid); }
+.metric-grid .card:nth-child(2) { border-left-color: var(--success); }
+.metric-grid .card:nth-child(3) { border-left-color: var(--brand-mid); }
+.metric-grid .card:nth-child(4) { border-left-color: var(--danger); }
+
+.metric-card__label {
+  font-size: var(--fs-cap);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin: 0 0 var(--space-2);
+}
+.metric-card__value {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  margin: 0;
+}
+.metric-card__value .unit { font-size: var(--fs-cap); font-weight: 400; color: var(--muted); }
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+}
+@media (min-width: 960px) { .panel-grid { grid-template-columns: 1fr 1fr; } }
+
+.panel-title { font-size: var(--fs-h3); margin: 0 0 var(--space-4); }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--fs-body); }
+.data-table th {
+  text-align: left;
+  font-size: var(--fs-cap);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding-block: var(--space-2);
+  border-bottom: 1px solid #E4E9F0;
+}
+.data-table td {
+  padding-block: var(--space-2);
+  border-bottom: 1px solid #EEF1F5;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table__rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: var(--fs-cap);
+  font-weight: 700;
+}
+
+.chart-wrap { position: relative; height: 260px; }
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+:focus-visible {
+  outline: 2px solid var(--brand-mid);
+  outline-offset: 2px;
+}
