@@ -5,7 +5,6 @@
 import {
   getRestaurants,
   getRestaurantsByCuisine,
-  searchRestaurantsByName,
   ApiError,
 } from './api.js';
 
@@ -22,44 +21,37 @@ const CUISINES = [
 ];
 
 
-// DOM refs
+// DOM references
 const el = {
 
-  searchInput:
-    document.getElementById('searchInput'),
+  searchInput: document.getElementById('searchInput'),
 
-  chipRow:
-    document.getElementById('chipRow'),
+  chipRow: document.getElementById('chipRow'),
 
-  grid:
-    document.getElementById('restaurantGrid'),
+  grid: document.getElementById('restaurantGrid'),
 
-  pageBanner:
-    document.getElementById('pageBanner'),
+  pageBanner: document.getElementById('pageBanner')
 
 };
 
 
-
 // State
-
 let activeCuisine = 'All';
-
 let searchTerm = '';
-
 let searchDebounceHandle = null;
-
 let requestToken = 0;
 
 
 
+// -----------------------------
 // Helpers
+// -----------------------------
 
-function escapeHtml(str) {
+function escapeHtml(value){
 
   const div = document.createElement('div');
 
-  div.textContent = str ?? '';
+  div.textContent = value ?? '';
 
   return div.innerHTML;
 
@@ -67,7 +59,7 @@ function escapeHtml(str) {
 
 
 
-function money(value) {
+function money(value){
 
   return Number(value || 0).toFixed(3);
 
@@ -87,15 +79,17 @@ function showPageError(message, retry){
 
   el.pageBanner.innerHTML = `
 
-  <div class="banner banner--error">
+    <div class="banner banner--error">
 
-    ${escapeHtml(message)}
+      <span>
+        ${escapeHtml(message)}
+      </span>
 
-    <button id="retryBtn">
-      Retry
-    </button>
+      <button id="retryBtn">
+        Retry
+      </button>
 
-  </div>
+    </div>
 
   `;
 
@@ -111,7 +105,9 @@ function showPageError(message, retry){
 
 
 
-// Loading
+// -----------------------------
+// Loading UI
+// -----------------------------
 
 function renderSkeletons(){
 
@@ -120,15 +116,22 @@ function renderSkeletons(){
   )
   .map(()=>`
 
-    <div class="card restaurant-card">
+    <article class="card restaurant-card">
 
-      <div class="skeleton"></div>
+      <div class="skeleton"
+      style="height:120px">
+      </div>
 
-      <div class="skeleton skeleton--line"></div>
 
-      <div class="skeleton skeleton--line"></div>
+      <div class="skeleton skeleton--line">
+      </div>
 
-    </div>
+
+      <div class="skeleton skeleton--line">
+      </div>
+
+
+    </article>
 
   `)
   .join('');
@@ -137,23 +140,21 @@ function renderSkeletons(){
 
 
 
-// Empty
-
 function renderEmpty(message){
 
   el.grid.innerHTML = `
 
-  <div class="empty">
+    <div class="empty">
 
-    <div class="empty__icon">
-      🔍
+      <div class="empty__icon">
+        🔍
+      </div>
+
+      <p>
+        ${escapeHtml(message)}
+      </p>
+
     </div>
-
-    <p>
-      ${escapeHtml(message)}
-    </p>
-
-  </div>
 
   `;
 
@@ -161,20 +162,26 @@ function renderEmpty(message){
 
 
 
-
-// Cuisine buttons
+// -----------------------------
+// Cuisine chips
+// -----------------------------
 
 function renderChips(){
 
   el.chipRow.innerHTML =
-  CUISINES.map(c=>`
+  CUISINES.map(c => `
 
     <button
 
-      class="filter-chip 
-      ${c===activeCuisine 
+      type="button"
+
+      class="
+      filter-chip
+      ${c === activeCuisine
       ? 'filter-chip--active'
-      : ''}"
+      : ''}
+
+      "
 
       data-cuisine="${c}"
 
@@ -191,16 +198,16 @@ function renderChips(){
 
   el.chipRow
   .querySelectorAll('[data-cuisine]')
-  .forEach(btn=>{
+  .forEach(button=>{
 
 
-    btn.addEventListener(
+    button.addEventListener(
       'click',
       ()=>{
 
 
         activeCuisine =
-        btn.dataset.cuisine;
+        button.dataset.cuisine;
 
 
         renderChips();
@@ -215,16 +222,15 @@ function renderChips(){
 
   });
 
-
 }
 
 
 
-
+// -----------------------------
 // Load restaurants
+// -----------------------------
 
 async function loadRestaurants(){
-
 
   const token = ++requestToken;
 
@@ -236,28 +242,46 @@ async function loadRestaurants(){
 
 
 
-  try{
+  try {
 
 
-    let restaurants;
+    let data = [];
 
 
+
+    // Search locally from API result
+    // avoids backend /search 500 error
 
     if(searchTerm.trim()){
 
 
-      restaurants =
-      await searchRestaurantsByName(
-        searchTerm.trim()
+      const allRestaurants =
+      await getRestaurants();
+
+
+
+      data =
+      allRestaurants.filter(r =>
+
+        r.name
+        .toLowerCase()
+        .includes(
+          searchTerm
+          .trim()
+          .toLowerCase()
+        )
+
       );
 
 
     }
 
+
+
     else if(activeCuisine !== 'All'){
 
 
-      restaurants =
+      data =
       await getRestaurantsByCuisine(
         activeCuisine
       );
@@ -265,10 +289,12 @@ async function loadRestaurants(){
 
     }
 
-    else{
 
 
-      restaurants =
+    else {
+
+
+      data =
       await getRestaurants();
 
 
@@ -283,13 +309,13 @@ async function loadRestaurants(){
 
 
 
-    renderGrid(
-      restaurants || []
-    );
+    renderGrid(data || []);
+
 
 
 
   }
+
 
   catch(error){
 
@@ -299,7 +325,7 @@ async function loadRestaurants(){
 
 
 
-    el.grid.innerHTML='';
+    el.grid.innerHTML = '';
 
 
 
@@ -309,7 +335,7 @@ async function loadRestaurants(){
 
       ? error.message
 
-      : 'Something went wrong',
+      : 'Something went wrong. Please try again.',
 
       loadRestaurants
 
@@ -319,13 +345,13 @@ async function loadRestaurants(){
   }
 
 
-
 }
 
 
 
-
-// Cards
+// -----------------------------
+// Restaurant cards
+// -----------------------------
 
 function renderGrid(restaurants){
 
@@ -334,18 +360,17 @@ function renderGrid(restaurants){
 
 
     renderEmpty(
-      searchTerm
+      searchTerm.trim()
       ?
-      'No restaurants found'
+      'No restaurants found.'
       :
-      'No restaurants available'
+      'No restaurants available.'
     );
 
 
     return;
 
   }
-
 
 
 
@@ -374,18 +399,16 @@ return `
 
 <div class="restaurant-card__thumb">
 
-
 <span class="badge 
-${paused 
+${paused
 ? 'badge--muted'
 : 'badge--success'}">
 
-${paused 
+${paused
 ? 'Paused'
 : 'Open'}
 
 </span>
-
 
 </div>
 
@@ -394,15 +417,14 @@ ${paused
 
 <div class="restaurant-card__top">
 
-
 <h2 class="restaurant-card__title">
 
 ${escapeHtml(r.name)}
 
 </h2>
 
-
 </div>
+
 
 
 
@@ -412,6 +434,7 @@ ${escapeHtml(r.name)}
 ${escapeHtml(r.cuisineType)}
 
 </div>
+
 
 
 
@@ -460,39 +483,31 @@ OMR
 
 <a
 
-href="${
-paused
-?
-'#'
-:
-`menu.html?restaurantId=${r.id}`
-}"
+href="
+${paused
+? '#'
+: `menu.html?restaurantId=${r.id}`
+}
+"
 
-class="btn ${
-paused
-?
-'btn--muted'
-:
-'btn--brand'
-}"
+class="
+btn
+${paused
+? 'btn--muted'
+: 'btn--brand'}
+"
 
 >
 
-${
-paused
-?
-'Paused'
-:
-'View Menu'
-}
-
+${paused
+? 'Paused'
+: 'View Menu'}
 
 </a>
 
 
 
 </article>
-
 
 `;
 
@@ -501,30 +516,31 @@ paused
 
 
 
-
+// -----------------------------
 // Search
+// -----------------------------
 
 el.searchInput.addEventListener(
 'input',
 ()=>{
 
 
-searchTerm =
-el.searchInput.value;
+  searchTerm =
+  el.searchInput.value;
 
 
 
-clearTimeout(
-searchDebounceHandle
-);
+  clearTimeout(
+    searchDebounceHandle
+  );
 
 
 
-searchDebounceHandle =
-setTimeout(
-loadRestaurants,
-300
-);
+  searchDebounceHandle =
+  setTimeout(
+    loadRestaurants,
+    300
+  );
 
 
 });
@@ -532,9 +548,9 @@ loadRestaurants,
 
 
 
-
-
-// Start
+// -----------------------------
+// Start page
+// -----------------------------
 
 renderChips();
 
