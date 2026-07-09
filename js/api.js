@@ -161,3 +161,7 @@ export function addOrderItem(orderId, { menuItemId, quantity, specialInstruction
 export function confirmOrder(orderId) {
   return api(`/orders/${orderId}/confirm`, { method: 'PUT' });
 }
+
+export function getDriverDeliveries(driverId) {
+    return api(`/drivers/${driverId}/deliveries`);
+}

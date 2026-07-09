@@ -1,274 +1,661 @@
+import {
+    getOrder,
+    getOrderTimeline,
+    getOrderEta,
+    getDriverDeliveries,
+    ApiError
+} from "./api.js";
 
-import { getOrder, getOrderTimeline, getOrderEta, ApiError } from './api.js';
 
-const STAGES = ['PENDING', 'PREPARING', 'READY', 'DELIVERED'];
+
+const STAGES = [
+    "PENDING",
+    "PREPARING",
+    "READY",
+    "ON_THE_WAY",
+    "DELIVERED"
+];
+
+
 const STAGE_LABELS = {
-  PENDING: 'Order placed',
-  PREPARING: 'Preparing',
-  READY: 'Ready',
-  DELIVERED: 'Delivered',
+
+    PENDING: "Order Placed",
+    PREPARING: "Preparing",
+    READY: "Ready",
+    ON_THE_WAY: "On The Way",
+    DELIVERED: "Delivered"
+
 };
+
+
 
 const POLL_INTERVAL_MS = 5000;
 
+
+
 const params = new URLSearchParams(location.search);
-const orderId = Number(params.get('orderId'));
+
+const orderId = Number(params.get("orderId"));
+
+
 
 const el = {
-  pageBanner: document.getElementById('pageBanner'),
-  orderIdLabel: document.getElementById('orderIdLabel'),
-  etaCountdown: document.getElementById('etaCountdown'),
-  timeline: document.getElementById('timeline'),
-  orderDetails: document.getElementById('orderDetails'),
+
+    pageBanner:
+        document.getElementById("pageBanner"),
+
+    orderIdLabel:
+        document.getElementById("orderIdLabel"),
+
+    restaurantName:
+        document.getElementById("restaurantName"),
+
+    etaCountdown:
+        document.getElementById("etaCountdown"),
+
+    timeline:
+        document.getElementById("timeline"),
+
+    orderDetails:
+        document.getElementById("orderDetails"),
+
+    driverName:
+        document.getElementById("driverName"),
+
+    driverStatus:
+        document.getElementById("driverStatus")
+
 };
 
+
+
 let pollHandle = null;
+
 let countdownHandle = null;
 
-// -----------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = String(str ?? '');
-  return div.innerHTML;
+
+
+function escapeHtml(value){
+
+    const div = document.createElement("div");
+
+    div.textContent = value ?? "";
+
+    return div.innerHTML;
+
 }
 
-function money(n) {
-  return Number(n || 0).toFixed(3);
+
+
+function money(value){
+
+    return Number(value || 0).toFixed(3);
+
 }
 
-function showPageError(message, onRetry) {
-  el.pageBanner.innerHTML = `
+
+
+
+function showPageError(message){
+
+
+    el.pageBanner.innerHTML = `
+
     <div class="banner banner--error">
-      <span>${escapeHtml(message)}</span>
-      <button type="button" id="retryBtn">Retry</button>
-    </div>`;
-  document.getElementById('retryBtn').addEventListener('click', onRetry);
+
+        ${escapeHtml(message)}
+
+    </div>
+
+    `;
+
 }
 
-function clearPageError() {
-  el.pageBanner.innerHTML = '';
+
+
+
+
+if(!orderId){
+
+
+    showPageError(
+        "No order id found. Use track.html?orderId=1"
+    );
+
+
+}
+else{
+
+
+    boot();
+
 }
 
-function readStatus(order) {
-  return order.status || order.orderStatus || 'PENDING';
+
+
+
+
+
+
+async function boot(){
+
+
+    await refreshAll();
+
+
+    pollHandle =
+        setInterval(refreshAll, POLL_INTERVAL_MS);
+
+
 }
 
-function formatTime(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
 
-// -----------------------------------------------------------------
-// Initial guard: no orderId in the URL
-// -----------------------------------------------------------------
-if (!orderId) {
-  el.etaCountdown.textContent = '—';
-  showPageError('No order id was given. Open this page as track.html?orderId=123.', () => location.reload());
-} else {
-  el.orderIdLabel.textContent = `Order #${orderId}`;
-  boot();
-}
 
-async function boot() {
-  await refreshAll();
-  pollHandle = setInterval(refreshAll, POLL_INTERVAL_MS);
 
-  // don't hammer the API while the tab is hidden
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      clearInterval(pollHandle);
-    } else {
-      refreshAll();
-      pollHandle = setInterval(refreshAll, POLL_INTERVAL_MS);
+
+
+
+
+async function refreshAll(){
+
+
+    try{
+
+
+        const [
+            order,
+            timeline,
+            eta
+
+        ] = await Promise.all([
+
+
+            getOrder(orderId),
+
+
+            getOrderTimeline(orderId)
+            .catch(()=>[]),
+
+
+            getOrderEta(orderId)
+            .catch(()=>null)
+
+
+        ]);
+
+
+
+        renderOrder(order);
+
+
+        renderTimeline(
+            order.status,
+            timeline
+        );
+
+
+        renderEta(eta);
+
+
+
+        // Load driver name
+        loadDriverName(
+            eta,
+            order.id
+        );
+
+
+
+
+        if(order.status === "DELIVERED"){
+
+            clearInterval(pollHandle);
+
+        }
+
+
+
     }
-  });
-}
+    catch(error){
 
-// -----------------------------------------------------------------
-// Poll: order + timeline + eta together each tick
-// -----------------------------------------------------------------
-async function refreshAll() {
-  try {
-    const [order, timeline, eta] = await Promise.all([
-      getOrder(orderId),
-      getOrderTimeline(orderId).catch(() => []), // timeline is supplementary — don't block the page on it
-      getOrderEta(orderId).catch(() => null),
-    ]);
 
-    clearPageError();
-    renderOrderDetails(order);
-    renderTimeline(readStatus(order), timeline);
-    renderCountdown(readStatus(order), eta);
+        showPageError(
 
-    if (readStatus(order) === 'DELIVERED' || readStatus(order) === 'CANCELLED') {
-      clearInterval(pollHandle);
+            error instanceof ApiError
+            ?
+            error.message
+            :
+            "Cannot load order"
+
+        );
+
+
     }
-  } catch (err) {
-    const message =
-      err instanceof ApiError ? err.message : 'Could not load this order. Please try again.';
-    showPageError(message, refreshAll);
-  }
-}
 
-// -----------------------------------------------------------------
-// Timeline
-// -----------------------------------------------------------------
-function renderTimeline(status, timeline) {
-  if (status === 'CANCELLED') {
-    el.timeline.innerHTML = `
-      <div class="timeline__node is-cancelled" style="flex:1">
-        <div class="timeline__dot"></div>
-        <div class="timeline__label">Cancelled</div>
-      </div>`;
-    return;
-  }
-
-  const currentIndex = STAGES.indexOf(status);
-  const timestamps = {};
-  (timeline || []).forEach((entry) => {
-    const key = entry.status || entry.stage;
-    const ts = entry.timestamp || entry.changedAt || entry.occurredAt;
-    if (key) timestamps[key] = ts;
-  });
-
-  el.timeline.innerHTML = STAGES.map((stage, i) => {
-    let state = 'is-pending';
-    if (i < currentIndex) state = 'is-completed';
-    else if (i === currentIndex) state = 'is-current';
-
-    return `
-      <div class="timeline__node ${state}">
-        <div class="timeline__dot"></div>
-        <div class="timeline__label">${STAGE_LABELS[stage]}</div>
-        <div class="timeline__time">${formatTime(timestamps[stage])}</div>
-      </div>`;
-  }).join('');
-}
-
-// -----------------------------------------------------------------
-// ETA countdown
-// -----------------------------------------------------------------
-function readEtaSeconds(eta) {
-  if (!eta) return null;
-  if (typeof eta.etaSeconds === 'number') return eta.etaSeconds;
-  if (typeof eta.etaMinutes === 'number') return eta.etaMinutes * 60;
-  if (eta.estimatedDeliveryTime) {
-    const diffMs = new Date(eta.estimatedDeliveryTime).getTime() - Date.now();
-    return diffMs > 0 ? Math.round(diffMs / 1000) : 0;
-  }
-  return null;
-}
-
-function renderCountdown(status, eta) {
-  clearInterval(countdownHandle);
-
-  if (status === 'CANCELLED') {
-    el.etaCountdown.textContent = 'Order cancelled';
-    el.etaCountdown.className = 'eta-card__countdown eta-card__countdown--cancelled';
-    return;
-  }
-
-  if (status === 'DELIVERED') {
-    el.etaCountdown.textContent = 'Delivered ✓';
-    el.etaCountdown.className = 'eta-card__countdown eta-card__countdown--done';
-    return;
-  }
-
-  let secondsLeft = readEtaSeconds(eta);
-  el.etaCountdown.className = 'eta-card__countdown';
-
-  if (secondsLeft == null) {
-    el.etaCountdown.textContent = 'Calculating…';
-    return;
-  }
-
-  tickCountdown(secondsLeft);
-  countdownHandle = setInterval(() => {
-    secondsLeft -= 1;
-    tickCountdown(secondsLeft);
-    if (secondsLeft <= 0) clearInterval(countdownHandle);
-  }, 1000);
-}
-
-function tickCountdown(secondsLeft) {
-  if (secondsLeft <= 0) {
-    el.etaCountdown.textContent = 'Any minute now';
-    return;
-  }
-  const mins = Math.floor(secondsLeft / 60);
-  const secs = secondsLeft % 60;
-  el.etaCountdown.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
-}
-
-// -----------------------------------------------------------------
-// Order details panel
-// -----------------------------------------------------------------
-function renderOrderDetails(order) {
-
-const items = order.orderItems || [];
-
-let html = "";
-
-items.forEach(item => {
-
-html += `
-
-<div class="order-details__row">
-
-<span>
-
-${escapeHtml(item.menuItem.name)}
-× ${item.quantity}
-
-</span>
-
-<span>
-
-${money(item.totalPrice)} OMR
-
-</span>
-
-</div>
-
-`;
-
-});
-
-html += `
-
-<div class="order-details__row">
-
-<span><strong>Total</strong></span>
-
-<span><strong>${money(order.totalAmount)} OMR</strong></span>
-
-</div>
-
-<div class="order-details__row">
-
-<span>Status</span>
-
-<span class="badge">
-
-${escapeHtml(order.status)}
-
-</span>
-
-</div>
-
-`;
-
-el.orderDetails.innerHTML = html;
 
 }
 
 
-document.getElementById("restaurantName").textContent =
-order.restaurant?.name || "Restaurant";
 
-document.getElementById("orderIdLabel").textContent =
-order.orderCode || `Order #${order.id}`;
+
+
+
+
+
+function renderOrder(order){
+
+
+
+    el.orderIdLabel.textContent =
+        order.orderCode || 
+        `Order #${order.id}`;
+
+
+
+    el.restaurantName.textContent =
+        order.restaurant?.name ||
+        "Restaurant";
+
+
+
+
+    let html = "";
+
+
+
+    (order.orderItems || [])
+    .forEach(item => {
+
+
+        html += `
+
+        <div class="order-details__row">
+
+
+            <span>
+
+                ${escapeHtml(
+                    item.menuItem?.name
+                )}
+
+                × ${item.quantity}
+
+            </span>
+
+
+
+            <span>
+
+                ${money(
+                    item.totalPrice
+                )}
+                OMR
+
+            </span>
+
+
+        </div>
+
+        `;
+
+
+    });
+
+
+
+
+
+    html += `
+
+
+    <div class="order-details__row">
+
+
+        <strong>Total</strong>
+
+
+        <strong>
+
+            ${money(order.totalAmount)}
+            OMR
+
+        </strong>
+
+
+    </div>
+
+
+
+    <div class="order-details__row">
+
+
+        Status
+
+
+        <span class="badge">
+
+            ${order.status.replaceAll("_"," ")}
+
+        </span>
+
+
+    </div>
+
+
+    `;
+
+
+
+    el.orderDetails.innerHTML = html;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+async function loadDriverName(eta, orderId){
+
+
+    try{
+
+
+        if(!eta || !eta.driverId){
+
+
+            el.driverName.textContent =
+                "No driver assigned";
+
+
+            return;
+
+        }
+
+
+
+
+
+        const deliveries =
+
+            await getDriverDeliveries(
+                eta.driverId
+            );
+
+
+
+
+
+
+        const delivery =
+
+            deliveries.find(
+                d => d.order?.Id === orderId
+            );
+
+
+
+
+
+
+
+        if(delivery && delivery.driver){
+
+
+
+            el.driverName.textContent =
+
+                `${delivery.driver.firstName}
+                 ${delivery.driver.lastName}`;
+
+
+
+
+
+            el.driverStatus.textContent =
+
+                delivery.status
+                .replaceAll("_"," ");
+
+
+
+        }
+        else{
+
+
+            el.driverName.textContent =
+                "No driver assigned";
+
+
+        }
+
+
+
+
+    }
+
+    catch(error){
+
+
+        console.error(
+            "Driver loading error:",
+            error
+        );
+
+
+        el.driverName.textContent =
+            "Driver unavailable";
+
+
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+function renderTimeline(status,timeline){
+
+
+
+    let currentIndex =
+        STAGES.indexOf(status);
+
+
+
+    el.timeline.innerHTML =
+
+    STAGES.map((stage,index)=>{
+
+
+        let state =
+            "is-pending";
+
+
+
+        if(index < currentIndex)
+
+            state =
+            "is-completed";
+
+
+        else if(index === currentIndex)
+
+            state =
+            "is-current";
+
+
+
+
+        return `
+
+
+        <div class="timeline__node ${state}">
+
+
+            <div class="timeline__dot"></div>
+
+
+
+            <div class="timeline__label">
+
+                ${STAGE_LABELS[stage]}
+
+            </div>
+
+
+
+        </div>
+
+
+        `;
+
+
+
+    }).join("");
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+function renderEta(eta){
+
+
+
+    clearInterval(countdownHandle);
+
+
+
+    if(!eta){
+
+
+        el.etaCountdown.textContent =
+            "--";
+
+
+        return;
+
+    }
+
+
+
+
+
+    if(eta.estimatedMinutes != null){
+
+
+
+        startCountdown(
+
+            eta.estimatedMinutes * 60
+
+        );
+
+
+    }
+    else{
+
+
+        el.etaCountdown.textContent =
+            "Calculating...";
+
+
+    }
+
+
+
+}
+
+
+
+
+
+
+
+
+function startCountdown(seconds){
+
+
+
+    function update(){
+
+
+
+        if(seconds <= 0){
+
+
+            el.etaCountdown.textContent =
+                "Arriving now";
+
+
+            clearInterval(countdownHandle);
+
+
+            return;
+
+        }
+
+
+
+
+        const minutes =
+            Math.floor(seconds / 60);
+
+
+
+        const sec =
+            seconds % 60;
+
+
+
+        el.etaCountdown.textContent =
+
+            `${minutes}:${String(sec)
+            .padStart(2,"0")}`;
+
+
+
+
+
+        seconds--;
+
+
+    }
+
+
+
+
+
+    update();
+
+
+
+    countdownHandle =
+
+        setInterval(
+            update,
+            1000
+        );
+
+
+}
