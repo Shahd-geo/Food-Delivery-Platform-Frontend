@@ -1,4 +1,3 @@
-
 const BASE = 'http://localhost:8080/api';
 
 
@@ -162,6 +161,17 @@ export function confirmOrder(orderId) {
   return api(`/orders/${orderId}/confirm`, { method: 'PUT' });
 }
 
+/** GET /api/drivers → DriverResponseDTO[] */
+export function getDrivers() {
+  return api('/drivers');
+}
+
+/** GET /api/drivers/{id}/deliveries → delivery/order list for that driver */
 export function getDriverDeliveries(driverId) {
     return api(`/drivers/${driverId}/deliveries`);
+}
+
+/** GET /api/reviews/driver/{id} → ReviewResponseDTO[] (each has .rating) */
+export function getDriverReviews(driverId) {
+  return api(`/reviews/driver/${driverId}`);
 }
